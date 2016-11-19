@@ -8,13 +8,15 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 // Context is a Command's fetch context, passed to the Handler. It gives access to the
 // original Command and the associated Queue.
 type Context struct {
-	Cmd Command
-	Q   *Queue
+	Cmd      Command
+	Q        *Queue
+	Duration time.Duration
 }
 
 // The Handler interface is used to process the Fetcher's requests. It is similar to the

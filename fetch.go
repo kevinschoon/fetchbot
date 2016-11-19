@@ -451,11 +451,12 @@ func (f *Fetcher) visit(cmd Command, res *http.Response, err error) {
 	}
 	// if the Command implements Handler, call that handler, otherwise
 	// dispatch to the Fetcher's Handler.
+	ctx := &Context{Cmd: cmd, Q: f.q, Duration: cmd.Duration()}
 	if h, ok := cmd.(Handler); ok {
-		h.Handle(&Context{Cmd: cmd, Q: f.q}, res, err)
+		h.Handle(ctx, res, err)
 		return
 	}
-	f.Handler.Handle(&Context{Cmd: cmd, Q: f.q}, res, err)
+	f.Handler.Handle(ctx, res, err)
 }
 
 // Prepare and execute the request for this Command.
@@ -506,9 +507,15 @@ func (f *Fetcher) doRequest(cmd Command) (*http.Response, error) {
 		req.Header.Set("User-Agent", f.UserAgent)
 	}
 	// Do the request.
+	start := time.Now()
 	res, err := f.HttpClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+	end := time.Now()
+	// TODO: Should be a cleaner way to pass via Context
+	if c, ok := cmd.(*Cmd); ok {
+		c.D = end.Sub(start)
 	}
 	return res, nil
 }

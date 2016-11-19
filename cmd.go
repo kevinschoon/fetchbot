@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 // Command interface defines the methods required by the Fetcher to request
@@ -15,6 +16,7 @@ import (
 type Command interface {
 	URL() *url.URL
 	Method() string
+	Duration() time.Duration
 }
 
 // BasicAuthProvider interface gets the credentials to use to perform the request
@@ -53,6 +55,7 @@ type HeaderProvider interface {
 type Cmd struct {
 	U *url.URL
 	M string
+	D time.Duration
 }
 
 // URL returns the resource targeted by this command.
@@ -63,6 +66,10 @@ func (c *Cmd) URL() *url.URL {
 // Method returns the HTTP verb to use to process this command (i.e. "GET", "HEAD", etc.).
 func (c *Cmd) Method() string {
 	return c.M
+}
+
+func (c *Cmd) Duration() time.Duration {
+	return c.D
 }
 
 // HandlerCmd is a basic Command with its own Handler function that is called
@@ -79,7 +86,7 @@ func NewHandlerCmd(method, rawURL string, fn func(*Context, *http.Response, erro
 	if err != nil {
 		return nil, err
 	}
-	return &HandlerCmd{&Cmd{parsedURL, method}, HandlerFunc(fn)}, nil
+	return &HandlerCmd{&Cmd{parsedURL, method, time.Duration(0)}, HandlerFunc(fn)}, nil
 }
 
 // robotCommand is a "sentinel type" used to distinguish the automatically enqueued robots.txt
